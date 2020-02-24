@@ -1,4 +1,6 @@
-# zerrors
+# zerrors 
+[![GoDoc](https://godoc.org/github.com/JavierZunzunegui/zerrors?status.svg)](http://godoc.org/github.com/JavierZunzunegui/zerrors) 
+[![Report card](https://goreportcard.com/badge/github.com/JavierZunzunegui/zerrors)](https://goreportcard.com/report/github.com/JavierZunzunegui/zerrors)
 
 Package zerrors provides additional functionality on top of the go 1.13 error wrapping features,
 particularly frame information and flexibility over the wrapped error formatting, without sacrificing on performance.
