@@ -25,207 +25,140 @@ import (
 	"github.com/JavierZunzunegui/zerrors/internal"
 )
 
-func func0(b bool) error {
-	if b {
-		return zerrors.SNew("some error")
-	}
-	return nil
-}
+func ExampleSWrap() {
+	fmt.Println(zerrors.SWrap(nil, "irrelevant"))
 
-func func1(b bool) error {
-	return zerrors.SWrap(func0(b), fmt.Sprintf("with b=%t", b))
-}
+	err := zerrors.SNew("base")
 
-func func2(b bool) error {
-	if err := func1(b); err != nil {
-		return zerrors.SWrap(err, "with if err check")
-	}
-	return nil
-}
+	err = zerrors.SWrap(err, "first wrapper")
+	fmt.Println(err)
 
-func func3(b bool) error {
-	return zerrors.SWrap(func2(b), "no if err check")
-}
-
-func func4(b bool) error {
-	return zerrors.Wrap(func3(b), myError{})
-}
-
-type myError struct{}
-
-func (myError) Error() string { return "my error type" }
-
-func ExampleError() {
-	fmt.Println("without frames:")
-	fmt.Println(func4(true))
-	fmt.Println(func4(false))
-
-	internal.SetFrameCapture()
-	defer internal.UnsetFrameCapture()
-
-	fmt.Println("")
-	fmt.Println("with frames:")
-	fmt.Println(func4(true))
-	fmt.Println(func4(false))
-
+	err = zerrors.SWrap(err, "second wrapper")
+	fmt.Println(err)
 	// Output:
-	// without frames:
-	// my error type: no if err check: with if err check: with b=true: some error
 	// <nil>
-	//
-	// with frames:
-	// my error type (error_example_test.go:51): no if err check (error_example_test.go:47): with if err check (error_example_test.go:41): with b=true (error_example_test.go:36): some error (error_example_test.go:30)
+	// first wrapper: base
+	// second wrapper: first wrapper: base
+}
+
+func ExampleSWrap_customFormat() {
+	err := zerrors.SNew("base")
+	err = zerrors.SWrap(err, "first wrapper")
+	fmt.Println(err.Error())            // normal format
+	fmt.Println(customErrorFormat(err)) // custom format
+	// Output:
+	// first wrapper: base
+	// first wrapper - base
+}
+
+func ExampleSWrap_withFrame() {
+	// This is just in testing, elsewhere import "github.com/JavierZunzunegui/zerrors/zmain" in your main.go.
+	internal.SetFrameCapture()
+	defer internal.UnsetFrameCapture()
+
+	err := zerrors.SNew("base")
+
+	err = zerrors.SWrap(err, "first wrapper")
+	fmt.Println(err)
+
+	err = zerrors.SWrap(err, "second wrapper")
+	fmt.Println(err)
+	// Output:
+	// first wrapper (error_example_test.go:61): base (error_example_test.go:59)
+	// second wrapper (error_example_test.go:64): first wrapper (error_example_test.go:61): base (error_example_test.go:59)
+}
+
+func ExampleSWrap_withFrameCustomFormat() {
+	// This is just in testing, elsewhere import "github.com/JavierZunzunegui/zerrors/zmain" in your main.go.
+	internal.SetFrameCapture()
+	defer internal.UnsetFrameCapture()
+
+	err := zerrors.SNew("base")
+	err = zerrors.SWrap(err, "first wrapper")
+	fmt.Println(err.Error())            // normal format
+	fmt.Println(customErrorFormat(err)) // custom format
+	// Output:
+	// first wrapper (error_example_test.go:77): base (error_example_test.go:76)
+	// first wrapper (zerrors_test.ExampleSWrap_withFrameCustomFormat) - base (zerrors_test.ExampleSWrap_withFrameCustomFormat)
+}
+
+type codeError struct {
+	code int
+}
+
+func (e codeError) Error() string { return fmt.Sprintf("code=%d", e.code) }
+
+func ExampleWrap() {
+	fmt.Println(zerrors.Wrap(nil, codeError{1} /* irrelevant */))
+
+	err := zerrors.SNew("base")
+
+	err = zerrors.Wrap(err, codeError{1})
+	fmt.Println(err)
+
+	err = zerrors.Wrap(err, codeError{2})
+	fmt.Println(err)
+	// Output:
 	// <nil>
+	// code=1: base
+	// code=2: code=1: base
 }
 
-func ExampleUnwrapAndValue() {
-	fmt.Println("without frames:")
-	for err := func4(true); err != nil; err = errors.Unwrap(err) {
-		fmt.Println(zerrors.Value(err))
-	}
+func ExampleWrap_customFormat() {
+	err := zerrors.SNew("base")
+	err = zerrors.Wrap(err, codeError{1})
+	fmt.Println(err)                    // normal format
+	fmt.Println(customErrorFormat(err)) // custom format
+	// Output:
+	// code=1: base
+	// code=1 - base
+}
 
+func ExampleWrap_withFrame() {
+	// This is just in testing, elsewhere import "github.com/JavierZunzunegui/zerrors/zmain" in your main.go.
 	internal.SetFrameCapture()
 	defer internal.UnsetFrameCapture()
 
-	fmt.Println("")
-	fmt.Println("with frames:")
-	for err := func4(true); err != nil; err = errors.Unwrap(err) {
-		fmt.Println(zerrors.Value(err))
-	}
+	err := zerrors.SNew("base")
 
+	err = zerrors.Wrap(err, codeError{1})
+	fmt.Println(err)
+
+	err = zerrors.Wrap(err, codeError{2})
+	fmt.Println(err)
 	// Output:
-	// without frames:
-	// my error type
-	// no if err check
-	// with if err check
-	// with b=true
-	// some error
-	//
-	// with frames:
-	// my error type
-	// no if err check
-	// with if err check
-	// with b=true
-	// some error
+	// code=1 (error_example_test.go:124): base (error_example_test.go:122)
+	// code=2 (error_example_test.go:127): code=1 (error_example_test.go:124): base (error_example_test.go:122)
 }
 
-func ExampleUnwrapAndFrame() {
-	fmt.Println("without frames:")
-	for err := func4(true); err != nil; err = errors.Unwrap(err) {
-		if f, ok := zerrors.Frame(err); ok {
-			fmt.Printf("file=%q, line=%d, function=%q\n", path.Base(path.Dir(f.File))+"/"+path.Base(f.File), f.Line, f.Function)
-		} else {
-			fmt.Println("(no frame)")
-		}
-	}
-
+func ExampleWrap_withFrameCustomFormat() {
+	// This is just in testing, elsewhere import "github.com/JavierZunzunegui/zerrors/zmain" in your main.go.
 	internal.SetFrameCapture()
 	defer internal.UnsetFrameCapture()
 
-	fmt.Println("")
-	fmt.Println("with frames:")
-	for err := func4(true); err != nil; err = errors.Unwrap(err) {
-		if f, ok := zerrors.Frame(err); ok {
-			fmt.Printf("file=%q, line=%d, function=%q\n", path.Base(path.Dir(f.File))+"/"+path.Base(f.File), f.Line, f.Function)
-		} else {
-			fmt.Println("(no frame)")
-		}
-	}
-
+	err := zerrors.SNew("base")
+	err = zerrors.Wrap(err, codeError{1})
+	fmt.Println(err.Error())            // normal format
+	fmt.Println(customErrorFormat(err)) // custom format
 	// Output:
-	// without frames:
-	// (no frame)
-	// (no frame)
-	// (no frame)
-	// (no frame)
-	// (no frame)
-	//
-	// with frames:
-	// file="zerrors/error_example_test.go", line=51, function="github.com/JavierZunzunegui/zerrors_test.func4"
-	// file="zerrors/error_example_test.go", line=47, function="github.com/JavierZunzunegui/zerrors_test.func3"
-	// file="zerrors/error_example_test.go", line=41, function="github.com/JavierZunzunegui/zerrors_test.func2"
-	// file="zerrors/error_example_test.go", line=36, function="github.com/JavierZunzunegui/zerrors_test.func1"
-	// file="zerrors/error_example_test.go", line=30, function="github.com/JavierZunzunegui/zerrors_test.func0"
+	// code=1 (error_example_test.go:140): base (error_example_test.go:139)
+	// code=1 (zerrors_test.ExampleWrap_withFrameCustomFormat) - base (zerrors_test.ExampleWrap_withFrameCustomFormat)
 }
 
-func customError(err error, joiner func([]string) string, f func(error, *runtime.Frame) string) string {
+// An example custom alternative to err.Error().
+func customErrorFormat(err error) string {
 	var ss []string
 	for ; err != nil; err = errors.Unwrap(err) {
 		var framePtr *runtime.Frame
 		if frame, ok := zerrors.Frame(err); ok {
 			framePtr = &frame
 		}
-		ss = append(ss, f(zerrors.Value(err), framePtr))
+
+		s := zerrors.Value(err).Error()
+		if framePtr != nil {
+			s += " (" + path.Base(framePtr.Function) + ")"
+		}
+		ss = append(ss, s)
 	}
-	return joiner(ss)
-}
-
-func ExampleCustomFormat() {
-	internal.SetFrameCapture()
-	defer internal.UnsetFrameCapture()
-
-	target := func4(true)
-
-	fmt.Println("' - '")
-	fmt.Println(customError(target, func(ss []string) string { return strings.Join(ss, " - ") }, func(err error, _ *runtime.Frame) string { return err.Error() }))
-
-	fmt.Println("")
-	fmt.Println(`'\n\t'`)
-	fmt.Println(customError(
-		target,
-		func(ss []string) string {
-			var sep string
-			for i := range ss {
-				ss[i] = sep + ss[i]
-				sep += "\t"
-			}
-			return strings.Join(ss, "\n")
-		},
-		func(err error, _ *runtime.Frame) string { return err.Error() },
-	))
-
-	fmt.Println("")
-	fmt.Println(`reversed`)
-	fmt.Println(customError(
-		target,
-		func(ss []string) string {
-			rev := make([]string, len(ss))
-			for i := range ss {
-				rev[i] = ss[len(ss)-i-1]
-			}
-			return strings.Join(ss, " - ")
-		},
-		func(err error, _ *runtime.Frame) string { return err.Error() },
-	))
-
-	fmt.Println("")
-	fmt.Println(`frame function only`)
-	fmt.Println(customError(
-		target,
-		func(ss []string) string { return strings.Join(ss, ": ") },
-		func(err error, frame *runtime.Frame) string {
-			s := err.Error()
-			if frame != nil {
-				s += " (" + path.Base(frame.Function) + ")"
-			}
-			return s
-		},
-	))
-
-	// Output:
-	// ' - '
-	// my error type - no if err check - with if err check - with b=true - some error
-	//
-	// '\n\t'
-	// my error type
-	// 	no if err check
-	//		with if err check
-	//			with b=true
-	//				some error
-	//
-	// reversed
-	// my error type - no if err check - with if err check - with b=true - some error
-	//
-	// frame function only
-	// my error type (zerrors_test.func4): no if err check (zerrors_test.func3): with if err check (zerrors_test.func2): with b=true (zerrors_test.func1): some error (zerrors_test.func0)
+	return strings.Join(ss, " - ")
 }
