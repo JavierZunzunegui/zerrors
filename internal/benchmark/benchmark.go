@@ -12,16 +12,36 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-package benchmark_test
+package benchmark
 
 import (
+	"fmt"
 	"testing"
 )
 
-func BenchmarkZerrors_Wrap(b *testing.B) {
-	runBenchmarkCreateAndError(b, createWrap)
-}
+func Scenarios() []int { return []int{1, 2, 3, 5, 10, 20} }
 
-func BenchmarkZerrors_SWrap(b *testing.B) {
-	runBenchmarkCreateAndError(b, createSWrap)
+func defaultPrinter(err error) string { return err.Error() }
+
+func CreateAndError(b *testing.B, f func(int) error, printer func(error) string) {
+	if printer == nil {
+		printer = defaultPrinter
+	}
+
+	for _, depth := range Scenarios() {
+		depth := depth
+
+		b.Run(fmt.Sprintf("depth_%d", depth), func(b *testing.B) {
+			var msg string
+			for i := 0; i < b.N; i++ {
+				err := f(depth)
+				msg = printer(err)
+			}
+
+			b.StopTimer()
+			if testing.Verbose() {
+				b.Log(msg)
+			}
+		})
+	}
 }

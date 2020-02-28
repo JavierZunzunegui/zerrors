@@ -1,4 +1,4 @@
-module github.com/JavierZunzunegui/zerrors/benchmark
+module github.com/JavierZunzunegui/zerrors/internal/benchmark
 
 go 1.14
 
