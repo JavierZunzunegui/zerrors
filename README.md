@@ -64,6 +64,10 @@ Library callers - the `package main` - are best suited to make use of these,
 and through `zerrors/zmain` and custom formatters decide how all errors are serialised,
 including errors coming from external libraries.
 
+## Benchmarks
+
+See [benchmark/README.md](https://github.com/JavierZunzunegui/zerrors/blob/master/internal/benchmark/README.md).
+
 ## Support and Future work
 
 This is not an officially supported Google product.

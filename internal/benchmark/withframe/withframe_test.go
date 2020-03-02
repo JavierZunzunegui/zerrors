@@ -28,8 +28,10 @@ import (
 )
 
 const (
-	fileName    = `withframe_test\.go`
-	packagePath = `github\.com/JavierZunzunegui/zerrors/internal/benchmark/withframe_test`
+	fileName        = `withframe_test\.go`
+	packagePath     = `github\.com\/JavierZunzunegui\/zerrors\/internal\/benchmark\/withframe`
+	testPackagePath = packagePath + `_test`
+	filePath        = packagePath + `\/withframe_test\.go`
 )
 
 func TestErrorsContainsFrames(t *testing.T) {
@@ -42,18 +44,34 @@ func TestErrorsContainsFrames(t *testing.T) {
 			t.Errorf("createSWrap(%d): expected regexp %s got %s", depth, reg.String(), msg)
 		}
 
-		t.Fatal(createXerrorsErrorf(3).Error())
+		if reg, msg := pkgErrorsWithStackAndMessageRegexp(depth), printfWithPlusV(createPkgErrorsWithStackAndMessage(depth)); !reg.MatchString(msg) {
+			t.Errorf("createPkgErrorsWithStackAndMessage(%d): expected regexp\n%s\ngot\n%s\n", depth, reg.String(), msg)
+		}
 
-		t.Fatal(printfWithPlusV(createXerrorsErrorf(3)))
-
-		// TODO - check pkg.errors
-		// TODO - check xerrors
+		if reg, msg := xerrorsRegexp(depth), printfWithPlusV(createXerrorsErrorf(depth)); !reg.MatchString(msg) {
+			t.Errorf("createXerrorsErrorf(%d): expected regexp\n%s\ngot\n%s\n", depth, reg.String(), msg)
+		}
 	}
 }
 
 func zerrorsRegexp(depth int) *regexp.Regexp {
 	const frame = `\(` + fileName + `\:[1-9][0-9]*\)`
 	return regexp.MustCompile(fmt.Sprintf(`(wrapper %s\: ){%d}base %s`, frame, depth, frame))
+}
+
+func xerrorsRegexp(depth int) *regexp.Regexp {
+	const funcName = testPackagePath + `\.createXerrorsErrorf`
+	const linePath = `.*` + filePath + `:[1-9][0-9]*`
+	const detailMsg = `wrapper:\n *` + funcName + `\n *` + linePath
+	const baseMsg = `base:\n *` + funcName + `\n *` + linePath
+	return regexp.MustCompile(fmt.Sprintf(`%s(\n *- %s){%d}\n *- %s`, detailMsg, detailMsg, depth-1, baseMsg))
+}
+
+func pkgErrorsWithStackAndMessageRegexp(depth int) *regexp.Regexp {
+	const funcName = testPackagePath + `\.createPkgErrorsWithStackAndMessage`
+	const lineNumber = `[1-9][0-9]*`
+	const linePath = `.*` + filePath + `:` + lineNumber
+	return regexp.MustCompile(fmt.Sprintf(`base(\n%s\n\t%s){%d}(\n.*\n *\t.*:%s)+(\nwrapper){%d}`, funcName, linePath, depth+1, lineNumber, depth))
 }
 
 func printfWithPlusV(err error) string {
@@ -101,5 +119,5 @@ func createXerrorsErrorf(depth int) error {
 }
 
 func BenchmarkXerrors_Errorf(b *testing.B) {
-	benchmark.CreateAndError(b, createXerrorsErrorf, nil /* TODO */)
+	benchmark.CreateAndError(b, createXerrorsErrorf, printfWithPlusV)
 }
