@@ -12,6 +12,7 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
+// Package benchmark contains internal, common code for all benchmarks.
 package benchmark
 
 import (
@@ -19,10 +20,12 @@ import (
 	"testing"
 )
 
+// Scenarios are the different depths at which wrapping is being tested in all benchmarks.
 func Scenarios() []int { return []int{1, 2, 3, 5, 10, 20} }
 
 func defaultPrinter(err error) string { return err.Error() }
 
+// CreateAndError runs a benchmark consisting creating an error via wrapping it multiple times and serialising it.
 func CreateAndError(b *testing.B, f func(int) error, printer func(error) string) {
 	if printer == nil {
 		printer = defaultPrinter
