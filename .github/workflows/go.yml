@@ -3,7 +3,7 @@ on: [push, pull_request]
 jobs:
 
   build-and-test:
-    name: Build an Test
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
 
@@ -21,3 +21,7 @@ jobs:
     
     - name: Test
       run: go test ./...
+
+    - name: Test benchmarks module
+      run: cd internal/benchmark; go test ./...
+
