@@ -1,6 +1,6 @@
 module github.com/JavierZunzunegui/zerrors/internal/benchmark
 
-go 1.14
+go 1.13
 
 require (
 	github.com/JavierZunzunegui/zerrors v0.1.0
