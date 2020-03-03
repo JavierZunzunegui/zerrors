@@ -29,9 +29,8 @@ import (
 
 const (
 	fileName        = `withframe_test\.go`
-	packagePath     = `github\.com\/JavierZunzunegui\/zerrors\/internal\/benchmark\/withframe`
-	testPackagePath = packagePath + `_test`
-	filePath        = packagePath + `\/withframe_test\.go`
+	testPackagePath = `github\.com\/JavierZunzunegui\/zerrors\/internal\/benchmark\/withframe_test`
+	repoPath        = `zerrors\/internal\/benchmark\/withframe\/withframe_test\.go`
 )
 
 func TestErrorsContainsFrames(t *testing.T) {
@@ -61,7 +60,7 @@ func zerrorsRegexp(depth int) *regexp.Regexp {
 
 func xerrorsRegexp(depth int) *regexp.Regexp {
 	const funcName = testPackagePath + `\.createXerrorsErrorf`
-	const linePath = `.*` + filePath + `:[1-9][0-9]*`
+	const linePath = `.*` + repoPath + `:[1-9][0-9]*`
 	const detailMsg = `wrapper:\n *` + funcName + `\n *` + linePath
 	const baseMsg = `base:\n *` + funcName + `\n *` + linePath
 	return regexp.MustCompile(fmt.Sprintf(`%s(\n *- %s){%d}\n *- %s`, detailMsg, detailMsg, depth-1, baseMsg))
@@ -70,7 +69,7 @@ func xerrorsRegexp(depth int) *regexp.Regexp {
 func pkgErrorsWithStackAndMessageRegexp(depth int) *regexp.Regexp {
 	const funcName = testPackagePath + `\.createPkgErrorsWithStackAndMessage`
 	const lineNumber = `[1-9][0-9]*`
-	const linePath = `.*` + filePath + `:` + lineNumber
+	const linePath = `.*` + repoPath + `:` + lineNumber
 	return regexp.MustCompile(fmt.Sprintf(`base(\n%s\n\t%s){%d}(\n.*\n *\t.*:%s)+(\nwrapper){%d}`, funcName, linePath, depth+1, lineNumber, depth))
 }
 
