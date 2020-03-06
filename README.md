@@ -66,7 +66,7 @@ including errors coming from external libraries.
 
 ## Benchmarks
 
-See [benchmark/README.md](https://github.com/JavierZunzunegui/zerrors/blob/master/internal/benchmark/README.md).
+See [benchmark/README.md](internal/benchmark/README.md).
 
 ## Support and Future work
 

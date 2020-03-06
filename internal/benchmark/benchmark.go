@@ -20,8 +20,11 @@ import (
 	"testing"
 )
 
+// ScenarioCount is a constant of the length of the Scenarios() output.
+const ScenarioCount = 6
+
 // Scenarios are the different depths at which wrapping is being tested in all benchmarks.
-func Scenarios() []int { return []int{1, 2, 3, 5, 10, 20} }
+func Scenarios() [ScenarioCount]int { return [...]int{1, 2, 3, 5, 10, 20} }
 
 func defaultPrinter(err error) string { return err.Error() }
 
