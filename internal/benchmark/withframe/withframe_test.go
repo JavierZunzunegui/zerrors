@@ -15,9 +15,11 @@
 package withframe_test
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/JavierZunzunegui/zerrors"
@@ -49,6 +51,10 @@ func TestErrorsContainsFrames(t *testing.T) {
 
 		if reg, msg := xerrorsRegexp(depth), printfWithPlusV(createXerrorsErrorf(depth)); !reg.MatchString(msg) {
 			t.Errorf("createXerrorsErrorf(%d): expected regexp\n%s\ngot\n%s\n", depth, reg.String(), msg)
+		} else if zWrapMsg := zerrorsLikeXerrors(createWrap(depth)); !reg.MatchString(zWrapMsg) {
+			t.Fatalf("zerrorsLikeXerrors(createWrap(%d)): expected regexp\n%s\ngot\n%s\n", depth, reg.String(), zWrapMsg)
+		} else if zSWrapMsg := zerrorsLikeXerrors(createSWrap(depth)); !reg.MatchString(zSWrapMsg) {
+			t.Fatalf("zerrorsLikeXerrors(createSWrap(%d)): expected regexp\n%s\ngot\n%s\n", depth, reg.String(), zSWrapMsg)
 		}
 	}
 }
@@ -58,14 +64,6 @@ func zerrorsRegexp(depth int) *regexp.Regexp {
 	return regexp.MustCompile(fmt.Sprintf(`(wrapper %s\: ){%d}base %s`, frame, depth, frame))
 }
 
-func xerrorsRegexp(depth int) *regexp.Regexp {
-	const funcName = testPackagePath + `\.createXerrorsErrorf`
-	const linePath = `.*` + repoPath + `:[1-9][0-9]*`
-	const detailMsg = `wrapper:\n *` + funcName + `\n *` + linePath
-	const baseMsg = `base:\n *` + funcName + `\n *` + linePath
-	return regexp.MustCompile(fmt.Sprintf(`%s(\n *- %s){%d}\n *- %s`, detailMsg, detailMsg, depth-1, baseMsg))
-}
-
 func pkgErrorsWithStackAndMessageRegexp(depth int) *regexp.Regexp {
 	const funcName = testPackagePath + `\.createPkgErrorsWithStackAndMessage`
 	const lineNumber = `[1-9][0-9]*`
@@ -73,8 +71,41 @@ func pkgErrorsWithStackAndMessageRegexp(depth int) *regexp.Regexp {
 	return regexp.MustCompile(fmt.Sprintf(`base(\n%s\n\t%s){%d}(\n.*\n *\t.*:%s)+(\nwrapper){%d}`, funcName, linePath, depth+1, lineNumber, depth))
 }
 
+func xerrorsRegexp(depth int) *regexp.Regexp {
+	const funcName = testPackagePath + `\.(createXerrorsErrorf|createWrap|createSWrap)`
+	const linePath = `.*` + repoPath + `:[1-9][0-9]*`
+	const detailMsg = `wrapper:\n *` + funcName + `\n *` + linePath
+	const baseMsg = `base:\n *` + funcName + `\n *` + linePath
+	return regexp.MustCompile(fmt.Sprintf(`%s(\n *- %s){%d}\n *- %s`, detailMsg, detailMsg, depth-1, baseMsg))
+}
+
 func printfWithPlusV(err error) string {
 	return fmt.Sprintf("%+v", err)
+}
+
+func zerrorsLikeXerrors(err error) string {
+	var buf bytes.Buffer
+
+	for firstError := true; err != nil; err, firstError = errors.Unwrap(err), false {
+		frame, _ := zerrors.Frame(err)
+
+		if !firstError {
+			buf.WriteString("\n  - ")
+		}
+		buf.WriteString(zerrors.Value(err).Error())
+		buf.WriteString(":\n    ")
+		buf.WriteString(frame.Function)
+		buf.WriteString("\n        ")
+		buf.WriteString(frame.File)
+		buf.WriteString(":")
+
+		// alternative to buf.WriteString(strconv.Itoa(frame.Line)), without allocating.
+		b := buf.Bytes()
+		l := len(b)
+		buf.Write(strconv.AppendInt(b, int64(frame.Line), 10)[l:])
+	}
+
+	return buf.String()
 }
 
 func createWrap(depth int) error {
@@ -119,4 +150,12 @@ func createXerrorsErrorf(depth int) error {
 
 func BenchmarkXerrors_Errorf(b *testing.B) {
 	benchmark.CreateAndError(b, createXerrorsErrorf, printfWithPlusV)
+}
+
+func BenchmarkZerrors_WrapLikeXerrors(b *testing.B) {
+	benchmark.CreateAndError(b, createWrap, zerrorsLikeXerrors)
+}
+
+func BenchmarkZerrors_SWrapLikeXerrors(b *testing.B) {
+	benchmark.CreateAndError(b, createSWrap, zerrorsLikeXerrors)
 }
