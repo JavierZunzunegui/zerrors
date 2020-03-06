@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"runtime"
 	"strconv"
 	"testing"
 
@@ -37,23 +38,30 @@ const (
 
 func TestErrorsContainsFrames(t *testing.T) {
 	for _, depth := range benchmark.Scenarios() {
-		if reg, msg := zerrorsRegexp(depth), createWrap(depth).Error(); !reg.MatchString(msg) {
+
+		wErr := createWrap(depth)
+		if reg, msg := zerrorsRegexp(depth), wErr.Error(); !reg.MatchString(msg) {
 			t.Errorf("createWrap(%d): expected regexp %s got %s", depth, reg.String(), msg)
 		}
 
-		if reg, msg := zerrorsRegexp(depth), createSWrap(depth).Error(); !reg.MatchString(msg) {
+		swErr := createSWrap(depth)
+		if reg, msg := zerrorsRegexp(depth), swErr.Error(); !reg.MatchString(msg) {
 			t.Errorf("createSWrap(%d): expected regexp %s got %s", depth, reg.String(), msg)
 		}
 
 		if reg, msg := pkgErrorsWithStackAndMessageRegexp(depth), printfWithPlusV(createPkgErrorsWithStackAndMessage(depth)); !reg.MatchString(msg) {
 			t.Errorf("createPkgErrorsWithStackAndMessage(%d): expected regexp\n%s\ngot\n%s\n", depth, reg.String(), msg)
+		} else if zWrapMsg := zerrorsLikePkgErrors(wErr); !reg.MatchString(zWrapMsg) {
+			t.Fatalf("zerrorsLikePkgErrors(createWrap(%d)): expected regexp\n%s\ngot\n%s\n", depth, reg.String(), zWrapMsg)
+		} else if zSWrapMsg := zerrorsLikePkgErrors(swErr); !reg.MatchString(zSWrapMsg) {
+			t.Fatalf("zerrorsLikePkgErrors(createSWrap(%d)): expected regexp\n%s\ngot\n%s\n", depth, reg.String(), zSWrapMsg)
 		}
 
 		if reg, msg := xerrorsRegexp(depth), printfWithPlusV(createXerrorsErrorf(depth)); !reg.MatchString(msg) {
 			t.Errorf("createXerrorsErrorf(%d): expected regexp\n%s\ngot\n%s\n", depth, reg.String(), msg)
-		} else if zWrapMsg := zerrorsLikeXerrors(createWrap(depth)); !reg.MatchString(zWrapMsg) {
+		} else if zWrapMsg := zerrorsLikeXerrors(wErr); !reg.MatchString(zWrapMsg) {
 			t.Fatalf("zerrorsLikeXerrors(createWrap(%d)): expected regexp\n%s\ngot\n%s\n", depth, reg.String(), zWrapMsg)
-		} else if zSWrapMsg := zerrorsLikeXerrors(createSWrap(depth)); !reg.MatchString(zSWrapMsg) {
+		} else if zSWrapMsg := zerrorsLikeXerrors(swErr); !reg.MatchString(zSWrapMsg) {
 			t.Fatalf("zerrorsLikeXerrors(createSWrap(%d)): expected regexp\n%s\ngot\n%s\n", depth, reg.String(), zSWrapMsg)
 		}
 	}
@@ -65,10 +73,10 @@ func zerrorsRegexp(depth int) *regexp.Regexp {
 }
 
 func pkgErrorsWithStackAndMessageRegexp(depth int) *regexp.Regexp {
-	const funcName = testPackagePath + `\.createPkgErrorsWithStackAndMessage`
+	const funcName = testPackagePath + `\.(createPkgErrorsWithStackAndMessage|createWrap|createSWrap)`
 	const lineNumber = `[1-9][0-9]*`
 	const linePath = `.*` + repoPath + `:` + lineNumber
-	return regexp.MustCompile(fmt.Sprintf(`base(\n%s\n\t%s){%d}(\n.*\n *\t.*:%s)+(\nwrapper){%d}`, funcName, linePath, depth+1, lineNumber, depth))
+	return regexp.MustCompile(fmt.Sprintf(`base(\n%s\n\t%s){%d}(\n.*\n *\t.*:%s)*(\nwrapper){%d}`, funcName, linePath, depth+1, lineNumber, depth))
 }
 
 func xerrorsRegexp(depth int) *regexp.Regexp {
@@ -81,6 +89,45 @@ func xerrorsRegexp(depth int) *regexp.Regexp {
 
 func printfWithPlusV(err error) string {
 	return fmt.Sprintf("%+v", err)
+}
+
+func zerrorsLikePkgErrors(err error) string {
+	var frames []runtime.Frame
+	var errs []error
+	var lastFrameIndex int
+	for i := 0; err != nil; err, i = errors.Unwrap(err), i+1 {
+		errs = append(errs, zerrors.Value(err))
+		frame, ok := zerrors.Frame(err)
+		if ok {
+			frames = append(frames, frame)
+			lastFrameIndex = i
+		}
+	}
+
+	var buf bytes.Buffer
+	for firstError, i := true, len(errs)-1; i >= lastFrameIndex; firstError, i = false, i-1 {
+		if !firstError {
+			buf.WriteString("\n")
+		}
+		buf.WriteString(errs[i].Error())
+	}
+
+	for i := len(frames) - 1; i >= 0; i-- {
+		frame := frames[i]
+		buf.WriteString("\n")
+		buf.WriteString(frame.Function)
+		buf.WriteString("\n\t")
+		buf.WriteString(frame.File)
+		buf.WriteString(":")
+		buf.WriteString(strconv.Itoa(frame.Line))
+	}
+
+	for i := lastFrameIndex - 1; i >= 0; i-- {
+		buf.WriteString("\n")
+		buf.WriteString(errs[i].Error())
+	}
+
+	return buf.String()
 }
 
 func zerrorsLikeXerrors(err error) string {
@@ -150,6 +197,14 @@ func createXerrorsErrorf(depth int) error {
 
 func BenchmarkXerrors_Errorf(b *testing.B) {
 	benchmark.CreateAndError(b, createXerrorsErrorf, printfWithPlusV)
+}
+
+func BenchmarkZerrors_WrapLikePkgErrors(b *testing.B) {
+	benchmark.CreateAndError(b, createWrap, zerrorsLikePkgErrors)
+}
+
+func BenchmarkZerrors_SWrapLikePkgErrors(b *testing.B) {
+	benchmark.CreateAndError(b, createSWrap, zerrorsLikePkgErrors)
 }
 
 func BenchmarkZerrors_WrapLikeXerrors(b *testing.B) {
