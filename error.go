@@ -51,11 +51,16 @@ func (w *wrapError) Error() string {
 func (w *wrapError) errorViaBuf() string {
 	buf := bufPool.Get().(*bytes.Buffer)
 
-	w.errorToBuffer(buf)
+	var framer internal.Framer
+	if internal.GetFrameCapture() {
+		framer = internal.GetFramer()
+	}
+
+	w.errorToBuffer(buf, framer)
 
 	for current := w.next; current != nil; current = current.next {
 		buf.WriteString(": ")
-		current.errorToBuffer(buf)
+		current.errorToBuffer(buf, framer)
 	}
 
 	s := buf.String()
@@ -66,14 +71,14 @@ func (w *wrapError) errorViaBuf() string {
 	return s
 }
 
-func (w *wrapError) errorToBuffer(buf *bytes.Buffer) {
+func (w *wrapError) errorToBuffer(buf *bytes.Buffer, framer internal.Framer) {
 	buf.WriteString(w.value.Error())
 
 	if w.pc[0] == 0 {
 		return
 	}
 
-	frame, _ := runtime.CallersFrames(w.pc[:]).Next()
+	frame := framer.Get(w.pc[0])
 
 	buf.WriteString(" (")
 	buf.WriteString(path.Base(frame.File))
@@ -263,6 +268,5 @@ func Frame(err error) (runtime.Frame, bool) {
 		return runtime.Frame{}, false
 	}
 
-	frame, _ := runtime.CallersFrames(wErr.pc[:]).Next()
-	return frame, true
+	return internal.GetFramer().Get(wErr.pc[0]), true
 }

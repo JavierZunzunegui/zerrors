@@ -15,16 +15,38 @@
 // Package internal contains stateful global variables internal to zerrors.
 package internal
 
-var frameCapture = false
+func init() {
+	if linkerFrameCapture == "true" {
+		// Set by the linker.
+		SetFrameCapture()
+	}
+}
 
-// SetFrameCapture is only used in zmain, and in testing.
+var (
+	// frameCapture may be set to true during init phase, but never after (except in internal tests).
+	frameCapture = false
+
+	// linkerFrameCapture is a linker alternative to zmain to manipulate frameCapture.
+	// If 'true', frameCapture is enabled regardless of zmain import.
+	// If 'false', frameCapture is disabled regardless of zmain import.
+	// Any other value is ignored.
+	linkerFrameCapture string
+)
+
+// SetFrameCapture is only used in zmain's init func and in testing.
 func SetFrameCapture() {
+	if linkerFrameCapture == "false" {
+		return
+	}
+	once.Do(initCache)
 	frameCapture = true
 }
 
 // UnsetFrameCapture is only used in testing.
 func UnsetFrameCapture() {
-	frameCapture = false
+	if linkerFrameCapture != "true" {
+		frameCapture = false
+	}
 }
 
 // GetFrameCapture is a getter for frameCapture.
