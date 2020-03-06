@@ -2,12 +2,12 @@
 
  Benchmark (ns/op) | depth=1 | 2 | 3 | 5 | 10 | 20
 --- | --- | --- | --- | --- | --- | ---
-BenchmarkErrors_New | 125.00 | 237.00 | 311.00 | 513.00 | 1193.00 | 2790.00
-BenchmarkFmt_Errorf | 313.00 | 614.00 | 890.00 | 1568.00 | 3023.00 | 6241.00
-BenchmarkPkgErrors_WithMessage | 179.00 | 289.00 | 434.00 | 681.00 | 1357.00 | 3766.00
-BenchmarkXerrors_Errorf | 2247.00 | 3647.00 | 4870.00 | 7047.00 | 12066.00 | 22683.00
-BenchmarkZerrors_SWrap | 212.00 | 331.00 | 380.00 | 544.00 | 977.00 | 1887.00
-BenchmarkZerrors_Wrap | 254.00 | 357.00 | 462.00 | 677.00 | 1216.00 | 2319.00
+BenchmarkErrors_New | 125.00 | 217.00 | 304.00 | 533.00 | 1116.00 | 2430.00
+BenchmarkFmt_Errorf | 309.00 | 577.00 | 873.00 | 1443.00 | 2979.00 | 6171.00
+BenchmarkPkgErrors_WithMessage | 143.00 | 252.00 | 357.00 | 600.00 | 1284.00 | 2958.00
+BenchmarkXerrors_Errorf | 2184.00 | 3291.00 | 4363.00 | 6428.00 | 11775.00 | 22475.00
+BenchmarkZerrors_SWrap | 206.00 | 292.00 | 355.00 | 516.00 | 930.00 | 1788.00
+BenchmarkZerrors_Wrap | 246.00 | 358.00 | 456.00 | 655.00 | 1189.00 | 2305.00
 
  # B/op
 

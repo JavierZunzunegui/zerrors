@@ -2,17 +2,17 @@
 
  Benchmark (ns/op) | depth=1 | 2 | 3 | 5 | 10 | 20
 --- | --- | --- | --- | --- | --- | ---
-BenchmarkPkgErrors_WithStackAndMessage | 7949.00 | 10647.00 | 11122.00 | 14278.00 | 22310.00 | 43539.00
-BenchmarkXerrors_Errorf | 6051.00 | 8772.00 | 11191.00 | 17101.00 | 31451.00 | 60593.00
-BenchmarkZerrors_SWrapWithFrame | 1505.00 | 2317.00 | 3088.00 | 5454.00 | 11270.00 | 15477.00
-BenchmarkZerrors_WrapWithFrame | 1857.00 | 2852.00 | 3902.00 | 5815.00 | 10562.00 | 20905.00
+BenchmarkPkgErrors_WithStackAndMessage | 7922.00 | 9419.00 | 11090.00 | 14366.00 | 22361.00 | 39658.00
+BenchmarkXerrors_Errorf | 5466.00 | 8499.00 | 11082.00 | 16924.00 | 31111.00 | 59512.00
+BenchmarkZerrors_SWrapWithFrame | 1500.00 | 2302.00 | 2993.00 | 4469.00 | 8135.00 | 15747.00
+BenchmarkZerrors_WrapWithFrame | 1857.00 | 2825.00 | 3814.00 | 5738.00 | 10723.00 | 20241.00
 
  # B/op
 
  Benchmark (B/op) | depth=1 | 2 | 3 | 5 | 10 | 20
 --- | --- | --- | --- | --- | --- | ---
-BenchmarkPkgErrors_WithStackAndMessage | 1352 | 1528 | 1832 | 2440 | 3962 | 6753
-BenchmarkXerrors_Errorf | 2104 | 3705 | 4345 | 7546 | 15167 | 30028
+BenchmarkPkgErrors_WithStackAndMessage | 1352 | 1528 | 1832 | 2441 | 3962 | 6753
+BenchmarkXerrors_Errorf | 2104 | 3705 | 4345 | 7546 | 15168 | 30034
 BenchmarkZerrors_SWrapWithFrame | 576 | 864 | 1152 | 1728 | 3168 | 6081
 BenchmarkZerrors_WrapWithFrame | 576 | 864 | 1152 | 1728 | 3168 | 6081
 
