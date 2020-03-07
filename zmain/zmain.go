@@ -12,22 +12,25 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-// Package internal contains stateful global variables internal to zerrors.
-package internal
+// Package zmain enables frame capturing as a side effect of importing it.
+// If imported, it should be done within the main package itself, and ideally as the first import there.
+package zmain
 
-var frameCapture = false
+import (
+	_ "github.com/JavierZunzunegui/zerrors"
 
-// SetFrameCapture is only used in zmain, and in testing.
-func SetFrameCapture() {
-	frameCapture = true
-}
+	"github.com/JavierZunzunegui/zerrors/internal"
+)
 
 // UnsetFrameCapture is only used in testing.
 func UnsetFrameCapture() {
-	frameCapture = false
+	internal.UnsetFrameCapture()
 }
 
-// GetFrameCapture is a getter for frameCapture.
-func GetFrameCapture() bool {
-	return frameCapture
+func SetBasic(f func(error) string) {
+	internal.SetBasic(f)
+}
+
+func SetDetail(f func(error) string) {
+	internal.SetDetail(f)
 }

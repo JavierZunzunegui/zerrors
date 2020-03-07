@@ -18,6 +18,7 @@ package zerrors
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"path"
 	"runtime"
 	"strconv"
@@ -25,6 +26,16 @@ import (
 
 	"github.com/JavierZunzunegui/zerrors/internal"
 )
+
+func init() {
+	internal.SetBasic(func(err error) string {
+		return err.(*wrapError).basic()
+	})
+
+	internal.SetDetail(func(err error) string {
+		return err.(*wrapError).detail()
+	})
+}
 
 var bufPool = sync.Pool{
 	New: func() interface{} { return new(bytes.Buffer) },
@@ -37,25 +48,30 @@ type wrapError struct {
 	pc    [1]uintptr
 }
 
-// Error provides a default format to how wrapped errors will be serialised:
-// "{err1}: {err2}: ... : {errN}"
 func (w *wrapError) Error() string {
+	return internal.Basic(w)
+}
+
+// basic provides a default format to how wrapped errors will be serialised:
+// "{err1}: {err2}: ... : {errN}"
+func (w *wrapError) basic() string {
 	if w.next == nil && w.pc[0] == 0 {
 		// Taking a shortcut.
 		return w.value.Error()
 	}
 
-	return w.errorViaBuf()
+	return w.basicViaBuf()
 }
 
-func (w *wrapError) errorViaBuf() string {
+func (w *wrapError) basicViaBuf() string {
 	buf := bufPool.Get().(*bytes.Buffer)
 
-	w.errorToBuffer(buf)
+	buf.WriteString(w.value.Error())
 
 	for current := w.next; current != nil; current = current.next {
 		buf.WriteString(": ")
-		current.errorToBuffer(buf)
+		buf.WriteString(current.value.Error())
+
 	}
 
 	s := buf.String()
@@ -66,9 +82,52 @@ func (w *wrapError) errorViaBuf() string {
 	return s
 }
 
-func (w *wrapError) errorToBuffer(buf *bytes.Buffer) {
-	buf.WriteString(w.value.Error())
+func Detail(err error) string {
+	if _, ok := err.(*wrapError); ok {
+		return internal.Detail(err)
+	}
+	return fmt.Sprintf("%+v", err)
+}
 
+// TODO
+func (w *wrapError) detail() string {
+	if !internal.GetFrameCapture() {
+		return w.basic()
+	}
+
+	if w.next == nil && w.pc[0] == 0 {
+		// Taking a shortcut.
+		return w.value.Error()
+	}
+
+	return w.detailViaBuf()
+}
+
+func (w *wrapError) detailViaBuf() string {
+	buf := bufPool.Get().(*bytes.Buffer)
+
+	buf.WriteString(w.value.Error())
+	if w.pc[0] != 0 {
+		w.frameToBuffer(buf)
+	}
+
+	for current := w.next; current != nil; current = current.next {
+		buf.WriteString(": ")
+		buf.WriteString(current.value.Error())
+		if current.pc[0] != 0 {
+			current.frameToBuffer(buf)
+		}
+	}
+
+	s := buf.String()
+
+	buf.Reset()
+	bufPool.Put(buf)
+
+	return s
+}
+
+func (w *wrapError) frameToBuffer(buf *bytes.Buffer) {
 	if w.pc[0] == 0 {
 		return
 	}

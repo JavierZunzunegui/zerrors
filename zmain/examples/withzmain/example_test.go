@@ -17,12 +17,15 @@
 package withzmain_test
 
 import (
-	_ "github.com/JavierZunzunegui/zerrors/zmain"
-
 	"fmt"
 
+	"github.com/JavierZunzunegui/zerrors/zmain"
 	"github.com/JavierZunzunegui/zerrors/zmain/examples/internal"
 )
+
+func init() {
+	zmain.UnsetFrameCapture()
+}
 
 func ExampleWithZMain() {
 	fmt.Println(internal.ExampleFunc())
