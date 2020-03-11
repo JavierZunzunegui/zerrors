@@ -21,50 +21,25 @@ import (
 	"testing"
 
 	"github.com/JavierZunzunegui/zerrors"
-	"github.com/JavierZunzunegui/zerrors/internal"
 )
 
 // filename needs updating if this file is renamed.
 const fileName = "error_test.go"
 
-const separator = `\:\s`
+const separator = `\: `
 
-func TestZErrors(t *testing.T) {
-	t.Run("without frames", func(t *testing.T) {
-		testZErrors(t, false)
-	})
-
-	t.Run("with frames", func(t *testing.T) {
-		testZErrors(t, true)
-	})
-}
-
-func testZErrors(t *testing.T, withFrame bool) {
-	t.Run("wrap", func(t *testing.T) {
-		testWrap(t, withFrame)
-	})
-
-	t.Run("Is", testIs)
-
-	t.Run("As", testAs)
-}
+const frameRegString = `\(error_test\.go\:[1-9][0-9]*\)`
 
 var frameReg = func() *regexp.Regexp {
-	r := regexp.MustCompile(`\(` + regexp.QuoteMeta(fileName) + `\:[1-9][0-9]*\)`)
+	r := regexp.MustCompile(frameRegString)
 	if exampleFrame := "(" + fileName + ":100)"; !r.MatchString(exampleFrame) {
 		panic(fmt.Sprintf("example frame %q not matched the frame format '%s'", exampleFrame, r.String()))
 	}
 	return r
 }()
 
-func testWrap(t *testing.T, withFrame bool) {
-	var s string
-	if withFrame {
-		internal.SetFrameCapture()
-		s = `\s` + frameReg.String()
-	} else {
-		internal.UnsetFrameCapture()
-	}
+func TestZErrors_Wrap(t *testing.T) {
+	const s = ` ` + frameRegString
 
 	t.Run("nil cases", func(t *testing.T) {
 		if err := zerrors.Value(nil); err != nil {
@@ -126,14 +101,8 @@ func testWrap(t *testing.T, withFrame bool) {
 		if err := zerrors.Value(w1Err); err != baseErr {
 			t.Errorf("Value(w1Err): expecting baseErr=%q, got %q", baseErr, err)
 		}
-		if !withFrame {
-			if frame, ok := zerrors.Frame(w1Err); ok {
-				t.Errorf("Frame(w1Err): expecting false, got true with frame: %v", frame)
-			}
-		} else {
-			if _, ok := zerrors.Frame(w1Err); !ok {
-				t.Error("Frame(w1Err): expecting true, got false")
-			}
+		if _, ok := zerrors.Frame(w1Err); !ok {
+			t.Error("Frame(w1Err): expecting true, got false")
 		}
 		if err := errors.Unwrap(w1Err); err != nil {
 			t.Errorf("Unwrap(w1Err): expecting nil, got %q", err)
@@ -145,14 +114,8 @@ func testWrap(t *testing.T, withFrame bool) {
 		if msg := zerrors.Value(s1Err).Error(); msg != baseMsg {
 			t.Errorf("Value(SNew(baseMsg)).Error(): expecting err=%q, got %q", baseMsg, msg)
 		}
-		if !withFrame {
-			if frame, ok := zerrors.Frame(s1Err); ok {
-				t.Errorf("Frame(s1Err): expecting false, got true with frame: %v", frame)
-			}
-		} else {
-			if _, ok := zerrors.Frame(s1Err); !ok {
-				t.Error("Frame(s1Err): expecting true, got false")
-			}
+		if _, ok := zerrors.Frame(s1Err); !ok {
+			t.Error("Frame(s1Err): expecting true, got false")
 		}
 		if err := errors.Unwrap(s1Err); err != nil {
 			t.Errorf("Unwrap(s1Err): expecting nil, got %q", err)
@@ -188,14 +151,8 @@ func testWrap(t *testing.T, withFrame bool) {
 		if err := zerrors.Value(w2Err); err != secondErr {
 			t.Errorf("Value(w2Err): expecting secondErr=%q, got %q", secondErr, err)
 		}
-		if !withFrame {
-			if frame, ok := zerrors.Frame(w2Err); ok {
-				t.Errorf("Frame(w2Err): expecting false, got true with frame: %v", frame)
-			}
-		} else {
-			if _, ok := zerrors.Frame(w2Err); !ok {
-				t.Error("Frame(w2Err): expecting true, got false")
-			}
+		if _, ok := zerrors.Frame(w2Err); !ok {
+			t.Error("Frame(w2Err): expecting true, got false")
 		}
 		if err := errors.Unwrap(w2Err); err != w1Err {
 			t.Errorf("Unwrap(w2Err): expecting w1Err=%q, got %q", w1Err, err)
@@ -210,14 +167,8 @@ func testWrap(t *testing.T, withFrame bool) {
 		if msg := zerrors.Value(s2Err).Error(); msg != secondMsg {
 			t.Errorf("Value(s2Err).Error(): expecting secondMsg=%q, got %q", secondMsg, msg)
 		}
-		if !withFrame {
-			if frame, ok := zerrors.Frame(s2Err); ok {
-				t.Errorf("Frame(s2Err): expecting false, got true with frame: %v", frame)
-			}
-		} else {
-			if _, ok := zerrors.Frame(s2Err); !ok {
-				t.Error("Frame(s2Err): expecting true, got false")
-			}
+		if _, ok := zerrors.Frame(s2Err); !ok {
+			t.Error("Frame(s2Err): expecting true, got false")
 		}
 		if msg := zerrors.Value(errors.Unwrap(s2Err)).Error(); msg != baseMsg {
 			t.Errorf("Value(Unwrap(s2Err)).Error(): expecting baseMsg=%q, got %q", baseMsg, msg)
@@ -237,7 +188,7 @@ func testWrap(t *testing.T, withFrame bool) {
 	})
 }
 
-func testIs(t *testing.T) {
+func TestZErrors_Is(t *testing.T) {
 	inErr := errors.New("some error")
 	wErr := zerrors.New(inErr)
 	outErr := errors.New("wrapping error")
@@ -261,7 +212,7 @@ type custom2Error struct{ msg string }
 
 func (err custom2Error) Error() string { return err.msg }
 
-func testAs(t *testing.T) {
+func TestZErrors_As(t *testing.T) {
 	inErr := custom1Error{"some error"}
 	wErr := zerrors.New(inErr)
 	outErr := errors.New("wrapping error")

@@ -18,82 +18,23 @@ import (
 	"errors"
 	"fmt"
 	"path"
-	"runtime"
 	"strings"
 
 	"github.com/JavierZunzunegui/zerrors"
-	"github.com/JavierZunzunegui/zerrors/internal"
 )
 
 func ExampleSWrap() {
-	// This is just in testing, elsewhere import "github.com/JavierZunzunegui/zerrors/zmain" in your main.go.
-	internal.UnsetFrameCapture()
-
-	fmt.Println(zerrors.SWrap(nil, "irrelevant"))
-
-	err := zerrors.SNew("base")
-
-	err = zerrors.SWrap(err, "first wrapper")
-	fmt.Println(err)
-	fmt.Println(zerrors.Detail(err))
-
-	err = zerrors.SWrap(err, "second wrapper")
-	fmt.Println(err)
-	fmt.Println(zerrors.Detail(err))
-	// Output:
-	// <nil>
-	// first wrapper: base
-	// first wrapper: base
-	// second wrapper: first wrapper: base
-	// second wrapper: first wrapper: base
-}
-
-func ExampleSWrap_customFormat() {
-	// This is just in testing, elsewhere import "github.com/JavierZunzunegui/zerrors/zmain" in your main.go.
-	internal.UnsetFrameCapture()
-
 	err := zerrors.SNew("base")
 	err = zerrors.SWrap(err, "first wrapper")
-	fmt.Println(err)                    // normal format
-	fmt.Println(customErrorFormat(err)) // custom format
+	fmt.Println(err)                          // basic standard format
+	fmt.Println(zerrors.Detail(err))          // detail standard format
+	fmt.Println(basicCustomErrorFormat(err))  // basic custom format
+	fmt.Println(detailCustomErrorFormat(err)) // detail custom format
 	// Output:
 	// first wrapper: base
+	// first wrapper (error_example_test.go:28): base (error_example_test.go:27)
 	// first wrapper - base
-}
-
-func ExampleSWrap_withFrame() {
-	// This is just in testing, elsewhere import "github.com/JavierZunzunegui/zerrors/zmain" in your main.go.
-	internal.SetFrameCapture()
-
-	err := zerrors.SNew("base")
-
-	err = zerrors.SWrap(err, "first wrapper")
-	fmt.Println(err)
-	fmt.Println(zerrors.Detail(err))
-
-	err = zerrors.SWrap(err, "second wrapper")
-	fmt.Println(err)
-	fmt.Println(zerrors.Detail(err))
-	// Output:
-	// first wrapper: base
-	// first wrapper (error_example_test.go:70): base (error_example_test.go:68)
-	// second wrapper: first wrapper: base
-	// second wrapper (error_example_test.go:74): first wrapper (error_example_test.go:70): base (error_example_test.go:68)
-}
-
-func ExampleSWrap_withFrameCustomFormat() {
-	// This is just in testing, elsewhere import "github.com/JavierZunzunegui/zerrors/zmain" in your main.go.
-	internal.SetFrameCapture()
-
-	err := zerrors.SNew("base")
-	err = zerrors.SWrap(err, "first wrapper")
-	fmt.Println(err)                    // normal format
-	fmt.Println(zerrors.Detail(err))    // normal format
-	fmt.Println(customErrorFormat(err)) // custom format
-	// Output:
-	// first wrapper: base
-	// first wrapper (error_example_test.go:89): base (error_example_test.go:88)
-	// first wrapper (zerrors_test.ExampleSWrap_withFrameCustomFormat) - base (zerrors_test.ExampleSWrap_withFrameCustomFormat)
+	// first wrapper (zerrors_test.ExampleSWrap) - base (zerrors_test.ExampleSWrap)
 }
 
 type codeError struct {
@@ -103,85 +44,38 @@ type codeError struct {
 func (e codeError) Error() string { return fmt.Sprintf("code=%d", e.code) }
 
 func ExampleWrap() {
-	// This is just in testing, elsewhere import "github.com/JavierZunzunegui/zerrors/zmain" in your main.go.
-	internal.UnsetFrameCapture()
-
-	fmt.Println(zerrors.Wrap(nil, codeError{1} /* irrelevant */))
-
-	err := zerrors.SNew("base")
-
-	err = zerrors.Wrap(err, codeError{1})
-	fmt.Println(err)
-
-	err = zerrors.Wrap(err, codeError{2})
-	fmt.Println(err)
-	// Output:
-	// <nil>
-	// code=1: base
-	// code=2: code=1: base
-}
-
-func ExampleWrap_customFormat() {
-	// This is just in testing, elsewhere import "github.com/JavierZunzunegui/zerrors/zmain" in your main.go.
-	internal.UnsetFrameCapture()
-
 	err := zerrors.SNew("base")
 	err = zerrors.Wrap(err, codeError{1})
-	fmt.Println(err)                    // normal format
-	fmt.Println(customErrorFormat(err)) // custom format
+	fmt.Println(err)                          // basic standard format
+	fmt.Println(zerrors.Detail(err))          // detail standard format
+	fmt.Println(basicCustomErrorFormat(err))  // basic custom format
+	fmt.Println(detailCustomErrorFormat(err)) // detail custom format
 	// Output:
 	// code=1: base
+	// code=1 (error_example_test.go:48): base (error_example_test.go:47)
 	// code=1 - base
-}
-
-func ExampleWrap_withFrame() {
-	// This is just in testing, elsewhere import "github.com/JavierZunzunegui/zerrors/zmain" in your main.go.
-	internal.SetFrameCapture()
-
-	err := zerrors.SNew("base")
-
-	err = zerrors.Wrap(err, codeError{1})
-	fmt.Println(err)
-	fmt.Println(zerrors.Detail(err))
-
-	err = zerrors.Wrap(err, codeError{2})
-	fmt.Println(err)
-	fmt.Println(zerrors.Detail(err))
-	// Output:
-	// code=1: base
-	// code=1 (error_example_test.go:143): base (error_example_test.go:141)
-	// code=2: code=1: base
-	// code=2 (error_example_test.go:147): code=1 (error_example_test.go:143): base (error_example_test.go:141)
-}
-
-func ExampleWrap_withFrameCustomFormat() {
-	// This is just in testing, elsewhere import "github.com/JavierZunzunegui/zerrors/zmain" in your main.go.
-	internal.SetFrameCapture()
-
-	err := zerrors.SNew("base")
-	err = zerrors.Wrap(err, codeError{1})
-	fmt.Println(err)                    // normal format
-	fmt.Println(zerrors.Detail(err))    // normal format
-	fmt.Println(customErrorFormat(err)) // custom format
-	// Output:
-	// code=1: base
-	// code=1 (error_example_test.go:162): base (error_example_test.go:161)
-	// code=1 (zerrors_test.ExampleWrap_withFrameCustomFormat) - base (zerrors_test.ExampleWrap_withFrameCustomFormat)
+	// code=1 (zerrors_test.ExampleWrap) - base (zerrors_test.ExampleWrap)
 }
 
 // An example custom alternative to err.Error().
-func customErrorFormat(err error) string {
+func basicCustomErrorFormat(err error) string {
 	var ss []string
 	for ; err != nil; err = errors.Unwrap(err) {
-		var framePtr *runtime.Frame
+		ss = append(ss, zerrors.Value(err).Error())
+	}
+	return strings.Join(ss, " - ")
+}
+
+// An example custom alternative to zerrors.Detail(err).
+func detailCustomErrorFormat(err error) string {
+	var ss []string
+	for ; err != nil; err = errors.Unwrap(err) {
+		s := zerrors.Value(err).Error()
+
 		if frame, ok := zerrors.Frame(err); ok {
-			framePtr = &frame
+			s += " (" + path.Base(frame.Function) + ")"
 		}
 
-		s := zerrors.Value(err).Error()
-		if framePtr != nil {
-			s += " (" + path.Base(framePtr.Function) + ")"
-		}
 		ss = append(ss, s)
 	}
 	return strings.Join(ss, " - ")
