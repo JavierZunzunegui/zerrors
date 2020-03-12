@@ -2,27 +2,27 @@
 
  Benchmark (ns/op) | depth=1 | 2 | 3 | 5 | 10 | 20
 --- | --- | --- | --- | --- | --- | ---
-BenchmarkPkgErrors_WithStackAndMessage | 7949.00 | 10647.00 | 11122.00 | 14278.00 | 22310.00 | 43539.00
-BenchmarkXerrors_Errorf | 6051.00 | 8772.00 | 11191.00 | 17101.00 | 31451.00 | 60593.00
-BenchmarkZerrors_SWrapLikePkgErrors | 2518.00 | 4077.00 | 4978.00 | 7561.00 | 12455.00 | 23586.00
-BenchmarkZerrors_SWrapLikeXerrors | 2028.00 | 3282.00 | 4085.00 | 6148.00 | 11742.00 | 21835.00
-BenchmarkZerrors_SWrapWithFrame | 1505.00 | 2317.00 | 3088.00 | 5454.00 | 11270.00 | 15477.00
-BenchmarkZerrors_WrapLikePkgErrors | 2938.00 | 4734.00 | 5672.00 | 8914.00 | 15124.00 | 30272.00
-BenchmarkZerrors_WrapLikeXerrors | 2454.00 | 3945.00 | 5059.00 | 7497.00 | 14233.00 | 26351.00
-BenchmarkZerrors_WrapWithFrame | 1857.00 | 2852.00 | 3902.00 | 5815.00 | 10562.00 | 20905.00
+BenchmarkPkgErrors_WithStackAndMessage | 8004.00 | 9596.00 | 11233.00 | 14328.00 | 22558.00 | 40283.00
+BenchmarkXerrors_Errorf | 5540.00 | 8631.00 | 11071.00 | 17012.00 | 31966.00 | 59144.00
+BenchmarkZerrors_SWrapLikePkgErrors | 2547.00 | 4122.00 | 5115.00 | 7927.00 | 13056.00 | 24750.00
+BenchmarkZerrors_SWrapLikeXerrors | 2127.00 | 3454.00 | 4254.00 | 6366.00 | 11459.00 | 22402.00
+BenchmarkZerrors_SWrapWithFrame | 1532.00 | 2376.00 | 3139.00 | 4504.00 | 8312.00 | 15980.00
+BenchmarkZerrors_WrapLikePkgErrors | 2918.00 | 4766.00 | 5975.00 | 9297.00 | 15456.00 | 29629.00
+BenchmarkZerrors_WrapLikeXerrors | 2565.00 | 4019.00 | 5166.00 | 7838.00 | 14540.00 | 27286.00
+BenchmarkZerrors_WrapWithFrame | 1927.00 | 2900.00 | 4044.00 | 5879.00 | 10856.00 | 20732.00
 
  # B/op
 
  Benchmark (B/op) | depth=1 | 2 | 3 | 5 | 10 | 20
 --- | --- | --- | --- | --- | --- | ---
-BenchmarkPkgErrors_WithStackAndMessage | 1352 | 1528 | 1832 | 2440 | 3962 | 6753
-BenchmarkXerrors_Errorf | 2104 | 3705 | 4345 | 7546 | 15167 | 30028
+BenchmarkPkgErrors_WithStackAndMessage | 1352 | 1528 | 1832 | 2441 | 3962 | 6748
+BenchmarkXerrors_Errorf | 2104 | 3705 | 4345 | 7546 | 15167 | 30032
 BenchmarkZerrors_SWrapLikePkgErrors | 2022 | 4041 | 4556 | 8531 | 12387 | 25603
 BenchmarkZerrors_SWrapLikeXerrors | 1696 | 3040 | 3552 | 6240 | 12384 | 25312
-BenchmarkZerrors_SWrapWithFrame | 576 | 864 | 1152 | 1728 | 3168 | 6081
+BenchmarkZerrors_SWrapWithFrame | 576 | 864 | 1152 | 1744 | 3200 | 6081
 BenchmarkZerrors_WrapLikePkgErrors | 2006 | 4025 | 4540 | 8515 | 12371 | 25587
 BenchmarkZerrors_WrapLikeXerrors | 1648 | 3024 | 3536 | 6224 | 12368 | 24016
-BenchmarkZerrors_WrapWithFrame | 576 | 864 | 1152 | 1728 | 3168 | 6081
+BenchmarkZerrors_WrapWithFrame | 576 | 864 | 1152 | 1744 | 3200 | 6081
 
  # allocs/op
 
