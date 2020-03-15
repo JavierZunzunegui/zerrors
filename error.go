@@ -82,6 +82,8 @@ func (w *wrapError) basicViaBuf() string {
 	return s
 }
 
+// Detail is an alternative error encoding to err.Error(). It is meant (and by default, is) more detailed that
+// err.Error(). It can be called on any error but for non-zerror errors is encodes it in the standard %+v fmt form.
 func Detail(err error) string {
 	if _, ok := err.(*wrapError); ok {
 		return internal.Detail(err)
@@ -89,7 +91,6 @@ func Detail(err error) string {
 	return fmt.Sprintf("%+v", err)
 }
 
-// TODO
 func (w *wrapError) detail() string {
 	if !internal.GetFrameCapture() {
 		return w.basic()

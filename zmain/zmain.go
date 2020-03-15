@@ -12,25 +12,33 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-// Package zmain enables frame capturing as a side effect of importing it.
-// If imported, it should be done within the main package itself, and ideally as the first import there.
+// Package zmain allows setting of some global state afeecting how all zerrors are wrapped or serialised.
+// It is not meant to be imported by any normal library, those should rely on zerrors exclusively.
+// It is recommended to imported in at most one place and for it's methods to be called at most once and exclusively
+// during the package initialisation phase.
 package zmain
 
 import (
+	// zerrors set some state in zerrors/internal that must be set before zmain is used.
 	_ "github.com/JavierZunzunegui/zerrors"
 
 	"github.com/JavierZunzunegui/zerrors/internal"
 )
 
-// UnsetFrameCapture is only used in testing.
+// UnsetFrameCapture disables all frame capturing. This may be used primarily as a performance optimisation if frame
+// information is not desired at all.
 func UnsetFrameCapture() {
 	internal.UnsetFrameCapture()
 }
 
+// SetBasic modifies how the `Error() string` method serialises zerrors. Note this should not rely on the `Error()`
+// method of zerrors or it may enter an infinite recursion.
 func SetBasic(f func(error) string) {
 	internal.SetBasic(f)
 }
 
+// SetDetail modifies how the `zerrors.Detail(error) string` method serialises zerrors. Note this should not rely on the
+// `Detail(error)` function of zerrors or it may enter an infinite recursion.
 func SetDetail(f func(error) string) {
 	internal.SetDetail(f)
 }

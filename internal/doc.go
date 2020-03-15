@@ -12,16 +12,7 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
+// Package internal contains stateful global variables internal to zerrors.
+// This package owes its existence to the separation of zerror's functionality into two packages (zerrors & zmain),
+//which requires for the two to have some internal common package.
 package internal
-
-var frameCapture = true
-
-// UnsetFrameCapture is only used  in zmain, and in testing.
-func UnsetFrameCapture() {
-	frameCapture = false
-}
-
-// GetFrameCapture is a getter for frameCapture.
-func GetFrameCapture() bool {
-	return frameCapture
-}
