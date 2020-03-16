@@ -26,7 +26,7 @@ import (
 // filename needs updating if this file is renamed.
 const fileName = "error_test.go"
 
-const separator = `\: `
+const separator = `: `
 
 const frameRegString = `\(error_test\.go\:[1-9][0-9]*\)`
 
@@ -38,9 +38,7 @@ var frameReg = func() *regexp.Regexp {
 	return r
 }()
 
-func TestZErrors_Wrap(t *testing.T) {
-	const s = ` ` + frameRegString
-
+func TestWrap(t *testing.T) {
 	t.Run("nil cases", func(t *testing.T) {
 		if err := zerrors.Value(nil); err != nil {
 			t.Errorf("Value(nil): expecting nil, got %q", err)
@@ -86,17 +84,17 @@ func TestZErrors_Wrap(t *testing.T) {
 		}
 	})
 
-	reg1 := regexp.MustCompile(regexp.QuoteMeta(baseMsg))
-	regDetail1 := regexp.MustCompile(regexp.QuoteMeta(baseMsg) + s)
+	const basic1 = baseMsg
+	detail1 := regexp.MustCompile(baseMsg + " " + frameRegString)
 	w1Err := zerrors.New(baseErr)
 	s1Err := zerrors.SNew(baseMsg)
 
 	t.Run("first level wrapping", func(t *testing.T) {
-		if msg := w1Err.Error(); !reg1.MatchString(msg) {
-			t.Errorf("w1Err.Error(): expecting regex '%s', got %q", reg1.String(), msg)
+		if msg := w1Err.Error(); basic1 != msg {
+			t.Errorf("w1Err.Error(): expecting %q, got %q", basic1, msg)
 		}
-		if msg := zerrors.Detail(w1Err); !regDetail1.MatchString(msg) {
-			t.Errorf("Detail(w1Err): expecting regex '%s', got %q", regDetail1.String(), msg)
+		if msg := zerrors.Detail(w1Err); !detail1.MatchString(msg) {
+			t.Errorf("Detail(w1Err): expecting regex '%s', got %q", detail1.String(), msg)
 		}
 		if err := zerrors.Value(w1Err); err != baseErr {
 			t.Errorf("Value(w1Err): expecting baseErr=%q, got %q", baseErr, err)
@@ -108,8 +106,8 @@ func TestZErrors_Wrap(t *testing.T) {
 			t.Errorf("Unwrap(w1Err): expecting nil, got %q", err)
 		}
 
-		if msg := s1Err.Error(); !reg1.MatchString(msg) {
-			t.Errorf("s1Err.Error(): expecting regex '%s', got %q", reg1.String(), msg)
+		if msg := s1Err.Error(); basic1 != msg {
+			t.Errorf("s1Err.Error(): expecting '%q', got %q", basic1, msg)
 		}
 		if msg := zerrors.Value(s1Err).Error(); msg != baseMsg {
 			t.Errorf("Value(SNew(baseMsg)).Error(): expecting err=%q, got %q", baseMsg, msg)
@@ -136,17 +134,17 @@ func TestZErrors_Wrap(t *testing.T) {
 
 	const secondMsg = "second error"
 	secondErr := errors.New(secondMsg)
-	reg2 := regexp.MustCompile(regexp.QuoteMeta(secondMsg) + separator + reg1.String())
-	regDetail2 := regexp.MustCompile(regexp.QuoteMeta(secondMsg) + s + separator + regDetail1.String())
+	const basic2 = secondMsg + separator + basic1
+	detail2 := regexp.MustCompile(secondMsg + " " + frameRegString + regexp.QuoteMeta(separator) + detail1.String())
 	w2Err := zerrors.Wrap(w1Err, secondErr)
 	s2Err := zerrors.SWrap(s1Err, secondMsg)
 
 	t.Run("second level wrapping", func(t *testing.T) {
-		if msg := w2Err.Error(); !reg2.MatchString(msg) {
-			t.Errorf("w2Err.Error(): expecting regex '%s', got %q", reg2, msg)
+		if msg := w2Err.Error(); basic2 != msg {
+			t.Errorf("w2Err.Error(): expecting '%s', got %q", basic2, msg)
 		}
-		if msg := zerrors.Detail(w2Err); !regDetail2.MatchString(msg) {
-			t.Errorf("Detail(w2Err): expecting regex '%s', got %q", regDetail2, msg)
+		if msg := zerrors.Detail(w2Err); !detail2.MatchString(msg) {
+			t.Errorf("Detail(w2Err): expecting regex '%s', got %q", detail2, msg)
 		}
 		if err := zerrors.Value(w2Err); err != secondErr {
 			t.Errorf("Value(w2Err): expecting secondErr=%q, got %q", secondErr, err)
@@ -161,8 +159,8 @@ func TestZErrors_Wrap(t *testing.T) {
 			t.Errorf("Unwrap(Unwrap(w2Err)): expecting nil, got %q", err)
 		}
 
-		if msg := s2Err.Error(); !reg2.MatchString(msg) {
-			t.Errorf("s2Err.Error(): expecting regex '%s', got %q", reg2, msg)
+		if msg := s2Err.Error(); basic2 != msg {
+			t.Errorf("s2Err.Error(): expecting '%s', got %q", basic2, msg)
 		}
 		if msg := zerrors.Value(s2Err).Error(); msg != secondMsg {
 			t.Errorf("Value(s2Err).Error(): expecting secondMsg=%q, got %q", secondMsg, msg)
@@ -178,17 +176,17 @@ func TestZErrors_Wrap(t *testing.T) {
 		}
 
 		// Anti-pattern.
-		if msg := zerrors.Detail(zerrors.Wrap(w1Err, zerrors.New(secondErr))); !regDetail2.MatchString(msg) {
-			t.Errorf("Detail(Wrap(w1Err, New(secondErr))): expecting regex '%s', got %q", regDetail2, msg)
+		if msg := zerrors.Detail(zerrors.Wrap(w1Err, zerrors.New(secondErr))); !detail2.MatchString(msg) {
+			t.Errorf("Detail(Wrap(w1Err, New(secondErr))): expecting regex '%s', got %q", detail2, msg)
 		}
 		// Anti-pattern.
-		if msg, reg := zerrors.Detail(zerrors.Wrap(baseErr, secondErr)), regexp.MustCompile(regexp.QuoteMeta(secondMsg)+s+separator+regexp.QuoteMeta(baseMsg)); !reg.MatchString(msg) {
+		if msg, reg := zerrors.Detail(zerrors.Wrap(baseErr, secondErr)), regexp.MustCompile(secondMsg+" "+frameRegString+regexp.QuoteMeta(separator)+baseMsg); !reg.MatchString(msg) {
 			t.Errorf("Detail(Wrap(baseErr, secondErr)): expecting regex '%s', got %q", reg, msg)
 		}
 	})
 }
 
-func TestZErrors_Is(t *testing.T) {
+func TestWrapError_Is(t *testing.T) {
 	inErr := errors.New("some error")
 	wErr := zerrors.New(inErr)
 	outErr := errors.New("wrapping error")
@@ -212,7 +210,7 @@ type custom2Error struct{ msg string }
 
 func (err custom2Error) Error() string { return err.msg }
 
-func TestZErrors_As(t *testing.T) {
+func TestWrapError_As(t *testing.T) {
 	inErr := custom1Error{"some error"}
 	wErr := zerrors.New(inErr)
 	outErr := errors.New("wrapping error")
@@ -226,5 +224,47 @@ func TestZErrors_As(t *testing.T) {
 	err2 := custom2Error{}
 	if errors.As(wErr, &err2) {
 		t.Error("As(wErr, &err2): should be false")
+	}
+}
+
+func TestWrapError_Format(t *testing.T) {
+	const s = ` ` + frameRegString
+
+	const baseMsg = "base"
+	baseErr := zerrors.SNew(baseMsg)
+
+	const basic1 = baseMsg
+	detail1 := regexp.MustCompile(baseMsg + s)
+
+	if s := fmt.Sprintf("%s", baseErr); s != basic1 {
+		t.Errorf("fmt.Sprintf(%s, baseErr): expected '%s', got '%s'", "%s", basic1, s)
+	}
+	if s := fmt.Sprintf("%v", baseErr); s != basic1 {
+		t.Errorf("fmt.Sprintf(%s, baseErr): expected '%s', got '%s'", "%v", basic1, s)
+	}
+	if s, expected := fmt.Sprintf("%q", baseErr), `"`+baseMsg+`"`; s != expected {
+		t.Errorf("fmt.Sprintf(%s, baseErr): expected '%s', got '%s'", "%q", expected, s)
+	}
+	if s := fmt.Sprintf("%+v", baseErr); !detail1.MatchString(s) {
+		t.Errorf("fmt.Sprintf(%s, baseErr): expected regex '%s', got '%s'", "%+v", detail1.String(), s)
+	}
+
+	const secondMsg = "second error"
+	err2 := zerrors.SWrap(baseErr, secondMsg)
+
+	const basic2 = secondMsg + separator + basic1
+	detail2 := regexp.MustCompile(secondMsg + " " + frameRegString + regexp.QuoteMeta(separator) + detail1.String())
+
+	if s := fmt.Sprintf("%s", err2); s != basic2 {
+		t.Errorf("fmt.Sprintf(%s, err2): expected '%s', got '%s'", "%s", basic2, s)
+	}
+	if s := fmt.Sprintf("%v", err2); s != basic2 {
+		t.Errorf("fmt.Sprintf(%s, err2): expected '%s', got '%s'", "%v", basic2, s)
+	}
+	if s, expected := fmt.Sprintf("%q", err2), `"`+basic2+`"`; s != expected {
+		t.Errorf("fmt.Sprintf(%s, err2): expected '%s', got '%s'", "%q", expected, s)
+	}
+	if s := fmt.Sprintf("%+v", err2); !detail2.MatchString(s) {
+		t.Errorf("fmt.Sprintf(%s, err2): expected regex '%s', got '%s'", "%+v", detail1.String(), s)
 	}
 }

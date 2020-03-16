@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"path"
 	"runtime"
 	"strconv"
@@ -172,6 +173,23 @@ func (w *wrapError) deepCopy() *wrapError {
 		return nil
 	}
 	return &wrapError{value: w.value, next: w.next.deepCopy(), pc: w.pc}
+}
+
+// Format supports the fmt Printf (and variants) for wrapError.
+// The basic encoder (that of .Error()) is used in all encodings except for %+v, which uses the detail one
+func (w *wrapError) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		if s.Flag('+') {
+			_, _ = io.WriteString(s, internal.Detail(w))
+			return
+		}
+		_, _ = io.WriteString(s, w.Error())
+	case 's':
+		_, _ = io.WriteString(s, w.Error())
+	case 'q':
+		_, _ = fmt.Fprintf(s, "%q", w.Error())
+	}
 }
 
 // New produces a wrapError from a non-wrapError.
