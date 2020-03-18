@@ -91,7 +91,7 @@ func (w *wrapError) basicViaBuf() string {
 // Detail is an alternative error encoding to err.Error(), equivalent to the %+v format form.
 // It can be called on any error but for non-zerror errors is encodes it in the standard %+v fmt form.
 // For zerror errors, it uses the 'detail' function to serialise and it and is expected to (and by default, is) more
-// detailed and expensive than that err.Error() and contains frame information.
+// detailed and expensive than err.Error() and contains frame information.
 // By default this is in the form:
 // "{err1} ({file}:{line}): {err2} ({file}:{line}): ... : {errN} ({file}:{line})".
 func Detail(err error) string {
@@ -101,7 +101,7 @@ func Detail(err error) string {
 	return fmt.Sprintf("%+v", err)
 }
 
-// detail provides a default format to how wrapped errors will be serialised under %v format or with the Detail
+// detail provides a default format to how wrapped errors will be serialised under %+v format or with the Detail
 // function:
 // "{err1} ({file}:{line}): {err2} ({file}:{line}): ... : {errN} ({file}:{line})"
 func (w *wrapError) detail() string {
