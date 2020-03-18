@@ -49,11 +49,16 @@ type wrapError struct {
 	pc    [1]uintptr
 }
 
+// Error uses the 'basic' function to serialise the error.
+// By default it is, and under custom options it is expected to be, the shorter and more efficient form of wrapError
+// serialisation.
+// By default this is in the form "{err1}: {err2}: ... : {errN}" without any frame information.
 func (w *wrapError) Error() string {
 	return internal.Basic(w)
 }
 
-// basic provides a default format to how wrapped errors will be serialised:
+// basic provides a default format to how wrapped errors will be serialised under %s, %v, %q format or with the Error
+// method :
 // "{err1}: {err2}: ... : {errN}"
 func (w *wrapError) basic() string {
 	if w.next == nil && w.pc[0] == 0 {
@@ -83,8 +88,12 @@ func (w *wrapError) basicViaBuf() string {
 	return s
 }
 
-// Detail is an alternative error encoding to err.Error(). It is meant (and by default, is) more detailed that
-// err.Error(). It can be called on any error but for non-zerror errors is encodes it in the standard %+v fmt form.
+// Detail is an alternative error encoding to err.Error(), equivalent to the %+v format form.
+// It can be called on any error but for non-zerror errors is encodes it in the standard %+v fmt form.
+// For zerror errors, it uses the 'detail' function to serialise and it and is expected to (and by default, is) more
+// detailed and expensive than that err.Error() and contains frame information.
+// By default this is in the form:
+// "{err1} ({file}:{line}): {err2} ({file}:{line}): ... : {errN} ({file}:{line})".
 func Detail(err error) string {
 	if _, ok := err.(*wrapError); ok {
 		return internal.Detail(err)
@@ -92,6 +101,9 @@ func Detail(err error) string {
 	return fmt.Sprintf("%+v", err)
 }
 
+// detail provides a default format to how wrapped errors will be serialised under %v format or with the Detail
+// function:
+// "{err1} ({file}:{line}): {err2} ({file}:{line}): ... : {errN} ({file}:{line})"
 func (w *wrapError) detail() string {
 	if !internal.GetFrameCapture() {
 		return w.basic()
@@ -176,7 +188,7 @@ func (w *wrapError) deepCopy() *wrapError {
 }
 
 // Format supports the fmt Printf (and variants) for wrapError.
-// The basic encoder (that of .Error()) is used in all encodings except for %+v, which uses the detail one
+// The 'basic' encoder (that of .Error()) is used in all encodings except for %+v, which uses the 'detail' one.
 func (w *wrapError) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':

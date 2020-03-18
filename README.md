@@ -6,6 +6,15 @@
 Package zerrors provides additional functionality on top of the go 1.13 error wrapping features,
 particularly frame information and flexibility over the wrapped error formatting, without sacrificing on performance.
 
+## Contents
+
+-   [package github.com/JavierZunzunegui/zerrors](https://godoc.org/github.com/JavierZunzunegui/zerrors): the primary 
+    package, it is through this than one can wrap, inspect and serialise errors. Most users should only require this.
+-   [package github.com/JavierZunzunegui/zerrors/zmain](https://godoc.org/github.com/JavierZunzunegui/zerrors/zmain): 
+    an auxiliary package to configure default behaviour, namely the format of `Error()`, format's `%+v`, as well as
+    disabling frame capturing for improved performance. Most users will never require this, and for those who do use it
+    it should be only used within the package initialisation phase (`init()` or in a global `var`).
+
 ## How to use it
 
 Replace any existing
@@ -35,24 +44,26 @@ if err != nil {
 }
 ```
 
-Global errors should also be replaced to use `zerrors.New` and `zerrors.SNew`.
+Global errors should also be replaced to use `zerrors.New` or `zerrors.SNew`.
 
-The resulting error's `Error() string` method is of format `last message: ...: first wrap message: base message`,
-which is produced in a efficient manner.
-Alternative serialisation of the error is also possible, such that one can have a custom `MyFormat(error) string`
-to produce `last message - ... - first wrap message - base message`, or any other custom desirable format.
-Additionally, if `import _ "github.com/JavierZunzunegui/zerrors/zmain"` is included the errors come with frame info
-such that `Error() string` becomes `last message (file.go:10): ...: base message (base_file.go:11)`,
-where the files and lines indicate where the error was created.
-Custom formatting is also supported for frames.
+The resulting error's `Error() string` method is of format `last message: ...: first wrap message: base message`.
+A more detailed message is produced by `zerrors.Detail(error) string` or via the `%+v` pattern of the `fmt` methods, of 
+the form `last message (file.go:LINE): ... : first wrap message (file.go:LINE): base message (file.go:LINE)`.
+
+Alternative serialisation of the error is also possible, either via a custom method (say, `MyFormat(error) string`) or 
+by changing the default encodings via [zmain](https://godoc.org/github.com/JavierZunzunegui/zerrors/zmain). 
+This way one can produce any alternative message (such as `last message - ... - first wrap message - base message`, or 
+any variant with frame information), using the same inputs as the default encoding uses.
 
 The `errors.Is`, `errors.As` and `errors.Unwrap` methods from go1.13 are supported as expected,
 and are intended to remain the primary means to examine the contents of errors.
-Two new additional methods, `Value(error) error` and `Frame(error) (runtime.Frame, bool)`
-are introduced and can be used in conjunction with `errors.Unwrap` to implement more sophisticated functionality.
-Error inspection via type assertion is further discouraged.
+Two new additional methods, `zerrors.Value(error) error` and `zerros.Frame(error) (runtime.Frame, bool)` are introduced
+and can be used in conjunction with `errors.Unwrap` to implement more sophisticated functionality, such as the 
+alternative serialisation formats.
+Error inspection via type assertion (discouraged since go1.13) is further discouraged,
+as it will be of no use for errors returned by zerrors.
 
-More details and examples can be found in the various examples and tests in the source code.
+More details and examples can be found in the various examples, tests and benchmarks in the source code.
 
 ## General guidance
 
@@ -67,6 +78,12 @@ including errors coming from external libraries.
 ## Benchmarks
 
 See [benchmark/README.md](internal/benchmark/README.md).
+There are performance comparisons to all current mayor strategies for error wrapping: the standard library's
+[`errors.New`](https://golang.org/pkg/errors/#New) and
+[`fmt.Errorf`](https://golang.org/pkg/fmt/#Errorf) with the `%w` pattern,
+[`github.com/pkg/errors`](https://github.com/pkg/errors) and
+[`golang.org/x/xerrors`](https://github.com/golang/xerrors).
+Benchmarks show zerrors to have a better generally performance than all the above, while being more flexible.
 
 ## Support and Future work
 

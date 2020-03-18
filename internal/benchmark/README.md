@@ -2,10 +2,10 @@
 
 Compares the performance of the two error wrapping methods in zerrors (`Wrap` and `SWrap`) to other common error
 wrapping methods:
-- the standard library's `errors.New`.
-- the standard library's `fmt.Errorf` with the `%w` pattern.
-- `github.com/pkg/errors`.
-- `golang.org/x/xerrors`.
+- the standard library's [`errors.New`](https://golang.org/pkg/errors/#New).
+- the standard library's [`fmt.Errorf`](https://golang.org/pkg/fmt/#Errorf) with the `%w` pattern.
+- [`github.com/pkg/errors`](https://github.com/pkg/errors).
+- [`golang.org/x/xerrors`](https://github.com/golang/xerrors).
 
 ## frameless
 
