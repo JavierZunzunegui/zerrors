@@ -22,9 +22,14 @@ import (
 
 	"github.com/JavierZunzunegui/zerrors"
 	"github.com/JavierZunzunegui/zerrors/internal/benchmark"
+	"github.com/JavierZunzunegui/zerrors/zmain"
 	pkg_errors "github.com/pkg/errors"
 	"golang.org/x/xerrors"
 )
+
+func init() {
+	zmain.UnsetFrameCapture()
+}
 
 func TestErrorsAreIdentical(t *testing.T) {
 	for _, depth := range benchmark.Scenarios() {

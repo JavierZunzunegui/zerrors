@@ -25,7 +25,6 @@ import (
 
 	"github.com/JavierZunzunegui/zerrors"
 	"github.com/JavierZunzunegui/zerrors/internal/benchmark"
-	_ "github.com/JavierZunzunegui/zerrors/zmain" // makes zerrors capture frames
 	pkg_errors "github.com/pkg/errors"
 	"golang.org/x/xerrors"
 )
@@ -40,13 +39,19 @@ func TestErrorsContainsFrames(t *testing.T) {
 	for _, depth := range benchmark.Scenarios() {
 
 		wErr := createWrap(depth)
-		if reg, msg := zerrorsRegexp(depth), wErr.Error(); !reg.MatchString(msg) {
-			t.Errorf("createWrap(%d): expected regexp %s got %s", depth, reg.String(), msg)
+		if reg, msg := zerrorsBasicRegexp(depth), wErr.Error(); !reg.MatchString(msg) {
+			t.Errorf("createWrap(%d).Error(): expected regexp %s got %s", depth, reg.String(), msg)
+		}
+		if reg, msg := zerrorsDetailRegexp(depth), zerrors.Detail(wErr); !reg.MatchString(msg) {
+			t.Errorf("Detail(createWrap(%d)): expected regexp %s got %s", depth, reg.String(), msg)
 		}
 
 		swErr := createSWrap(depth)
-		if reg, msg := zerrorsRegexp(depth), swErr.Error(); !reg.MatchString(msg) {
-			t.Errorf("createSWrap(%d): expected regexp %s got %s", depth, reg.String(), msg)
+		if reg, msg := zerrorsBasicRegexp(depth), swErr.Error(); !reg.MatchString(msg) {
+			t.Errorf("createSWrap(%d).Error(): expected regexp %s got %s", depth, reg.String(), msg)
+		}
+		if reg, msg := zerrorsDetailRegexp(depth), zerrors.Detail(swErr); !reg.MatchString(msg) {
+			t.Errorf("Detail(createSWrap(%d)): expected regexp %s got %s", depth, reg.String(), msg)
 		}
 
 		if reg, msg := pkgErrorsWithStackAndMessageRegexp(depth), printfWithPlusV(createPkgErrorsWithStackAndMessage(depth)); !reg.MatchString(msg) {
@@ -67,7 +72,11 @@ func TestErrorsContainsFrames(t *testing.T) {
 	}
 }
 
-func zerrorsRegexp(depth int) *regexp.Regexp {
+func zerrorsBasicRegexp(depth int) *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf(`(wrapper: ){%d}base`, depth))
+}
+
+func zerrorsDetailRegexp(depth int) *regexp.Regexp {
 	const frame = `\(` + fileName + `\:[1-9][0-9]*\)`
 	return regexp.MustCompile(fmt.Sprintf(`(wrapper %s\: ){%d}base %s`, frame, depth, frame))
 }
@@ -163,7 +172,7 @@ func createWrap(depth int) error {
 }
 
 func BenchmarkZerrors_WrapWithFrame(b *testing.B) {
-	benchmark.CreateAndError(b, createWrap, nil)
+	benchmark.CreateAndError(b, createWrap, zerrors.Detail)
 }
 
 func createSWrap(depth int) error {
@@ -174,7 +183,7 @@ func createSWrap(depth int) error {
 }
 
 func BenchmarkZerrors_SWrapWithFrame(b *testing.B) {
-	benchmark.CreateAndError(b, createSWrap, nil)
+	benchmark.CreateAndError(b, createSWrap, zerrors.Detail)
 }
 
 func createPkgErrorsWithStackAndMessage(depth int) error {

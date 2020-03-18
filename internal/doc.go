@@ -12,14 +12,7 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-// Package zmain enables frame capturing as a side effect of importing it.
-// If imported, it should be done within the main package itself, and ideally as the first import there.
-package zmain
-
-import (
-	"github.com/JavierZunzunegui/zerrors/internal"
-)
-
-func init() {
-	internal.SetFrameCapture()
-}
+// Package internal contains stateful global variables internal to zerrors.
+// This package owes its existence to the separation of zerror's functionality into two packages (zerrors & zmain),
+//which requires for the two to have some internal common package.
+package internal

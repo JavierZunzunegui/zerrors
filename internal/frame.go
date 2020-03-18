@@ -12,17 +12,16 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-// Package internal is just used for some examples.
 package internal
 
-import (
-	"github.com/JavierZunzunegui/zerrors"
-)
+var frameCapture = true
 
-var e = zerrors.SNew("base")
+// UnsetFrameCapture is only used  in zmain, and in testing.
+func UnsetFrameCapture() {
+	frameCapture = false
+}
 
-// ExampleFunc returns a 2-tier wrapper error.
-// The base error is a global variable.
-func ExampleFunc() error {
-	return zerrors.SWrap(e, "wrapper")
+// GetFrameCapture is a getter for frameCapture.
+func GetFrameCapture() bool {
+	return frameCapture
 }
