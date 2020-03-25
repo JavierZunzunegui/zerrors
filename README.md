@@ -6,11 +6,11 @@
 Package zerrors provides additional functionality on top of the go 1.13 error wrapping features,
 particularly frame information and flexibility over the wrapped error formatting, without sacrificing on performance.
 
-## Contents
+## Packages
 
--   [package github.com/JavierZunzunegui/zerrors](https://godoc.org/github.com/JavierZunzunegui/zerrors): the primary 
+-   [github.com/JavierZunzunegui/zerrors](https://godoc.org/github.com/JavierZunzunegui/zerrors): the primary 
     package, it is through this than one can wrap, inspect and serialise errors. Most users should only require this.
--   [package github.com/JavierZunzunegui/zerrors/zmain](https://godoc.org/github.com/JavierZunzunegui/zerrors/zmain): 
+-   [github.com/JavierZunzunegui/zerrors/zmain](https://godoc.org/github.com/JavierZunzunegui/zerrors/zmain): 
     an auxiliary package to configure default behaviour, namely the format of `Error()`, format's `%+v`, as well as
     disabling frame capturing for improved performance. Most users will never require this, and for those who do use it
     it should be only used within the package initialisation phase (`init()` or in a global `var`).
@@ -65,6 +65,19 @@ as it will be of no use for errors returned by zerrors.
 
 More details and examples can be found in the various examples, tests and benchmarks in the source code.
 
+### Migrating From...
+
+- [`github.com/pkg/errors`](https://github.com/pkg/errors): 
+change `errors.Wrap(err, "...")`
+to `zerrors.SWrap(err, "...")`.
+- [`golang.org/x/xerrors`](https://github.com/golang/xerrors) or 
+[`fmt.Errorf`](https://golang.org/pkg/fmt/#Errorf) with `%w`:
+change `[xerrors/fmt].Errorf("...: %w", ..., err)` to
+`zerrors.SWrap(err, "...")` or `zerrors.SWrap(err, fmt.Sprintf("...", ...))`.
+- Custom `MyError{..., err: err}` for `type MyError` with `Unwrap() error` and
+`err error` parameter:
+remove `err` and `Unwrap`, change to `zerrors.Wrap(err, MyError{...})`
+
 ## General guidance
 
 Package zerrors works best if no other errors implement `interface{ Unwrap() error }`,
@@ -78,11 +91,12 @@ including errors coming from external libraries.
 ## Benchmarks
 
 See [benchmark/README.md](internal/benchmark/README.md).
-There are performance comparisons to all current mayor strategies for error wrapping: the standard library's
-[`errors.New`](https://golang.org/pkg/errors/#New) and
-[`fmt.Errorf`](https://golang.org/pkg/fmt/#Errorf) with the `%w` pattern,
-[`github.com/pkg/errors`](https://github.com/pkg/errors) and
-[`golang.org/x/xerrors`](https://github.com/golang/xerrors).
+There are performance comparisons to all current mayor strategies for error wrapping: 
+- the standard library's [`errors.New`](https://golang.org/pkg/errors/#New) and
+[`fmt.Errorf`](https://golang.org/pkg/fmt/#Errorf) with the `%w` pattern
+- [`github.com/pkg/errors`](https://github.com/pkg/errors)
+- [`golang.org/x/xerrors`](https://github.com/golang/xerrors)
+
 Benchmarks show zerrors to have a better generally performance than all the above, while being more flexible.
 
 ## Support and Future work
