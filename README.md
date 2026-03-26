@@ -1,7 +1,9 @@
-# zerrors 
-[![](https://github.com/JavierZunzunegui/zerrors/workflows/Go/badge.svg)](https://github.com/JavierZunzunegui/zerrors/actions?query=workflow%3AGo)
-[![GoDoc](https://godoc.org/github.com/JavierZunzunegui/zerrors?status.svg)](http://godoc.org/github.com/JavierZunzunegui/zerrors) 
-[![Report card](https://goreportcard.com/badge/github.com/JavierZunzunegui/zerrors)](https://goreportcard.com/report/github.com/JavierZunzunegui/zerrors)
+# zerrors
+
+[![Go Version](https://img.shields.io/github/go-mod/go-version/JavierZunzunegui/zerrors)](./go.mod)
+[![GoDoc](https://godoc.org/github.com/JavierZunzunegui/zerrors?status.svg)](https://pkg.go.dev/github.com/JavierZunzunegui/zerrors)
+[![Go report](https://goreportcard.com/badge/github.com/JavierZunzunegui/zerrors)](https://goreportcard.com/report/github.com/JavierZunzunegui/zerrors)
+[![License](https://img.shields.io/github/license/JavierZunzunegui/zerrors)](./LICENSE)
 
 Package zerrors provides additional functionality on top of the go 1.13 error wrapping features,
 particularly frame information and flexibility over the wrapped error formatting, without sacrificing on performance.
@@ -106,3 +108,7 @@ This is not an officially supported Google product.
 As of Feb 2020, zerrors is new and remains untested in production.
 Its implementation is minimal and consists of only a few exported methods.
 Please contribute to improve this library by sharing your experience via an issue or pull request.
+
+## Referenced in...
+
+https://github.com/golang/go/issues/36994
